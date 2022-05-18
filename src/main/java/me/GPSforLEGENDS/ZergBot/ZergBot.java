@@ -9,6 +9,7 @@ import com.github.ocraft.s2client.protocol.data.UnitType;
 import com.github.ocraft.s2client.protocol.data.Units;
 import com.github.ocraft.s2client.protocol.game.raw.StartRaw;
 import com.github.ocraft.s2client.protocol.response.ResponseGameInfo;
+import com.github.ocraft.s2client.protocol.spatial.Point;
 import com.github.ocraft.s2client.protocol.spatial.Point2d;
 import com.github.ocraft.s2client.protocol.unit.Alliance;
 import com.github.ocraft.s2client.protocol.unit.Unit;
@@ -24,8 +25,18 @@ public class ZergBot extends S2Agent {
     boolean stop = false;
     int counter = 0;
 
+    List<Point> expansionPoints;
+
     @Override
     public void onGameStart(){
+
+        expansionPoints = query().calculateExpansionLocations(observation());
+
+        expansionPoints.sort(Comparator.comparing(point -> {
+            Point2d startLoc = observation().getStartLocation().toPoint2d();
+            return query().pathingDistance(startLoc, point.toPoint2d());
+        }));
+
         System.out.println("Hello World");
     }
 
@@ -115,7 +126,20 @@ public class ZergBot extends S2Agent {
     }
 
     private void buildExpansion(){
-        
+        //TODO
+    }
+
+    private Unit getRandomMiningDrone(){
+        List<UnitInPool> miningDrones = observation().getUnits(Alliance.SELF, unitInPool -> {
+            //TODO figure out how to get a mining drone
+            return unitInPool.unit().getType() == Units.ZERG_DRONE;
+        });
+
+        if(!miningDrones.isEmpty()){
+            return miningDrones.get(0).unit();
+        }
+
+        return null;
     }
 
     private int startCounter = -1;
